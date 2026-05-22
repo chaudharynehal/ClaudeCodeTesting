@@ -40,6 +40,12 @@ def allowed_image(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_IMAGE_EXT
 
 
+def clean_path(raw):
+    """Strip surrounding quotes and normalize path separators."""
+    path = raw.strip().strip('"\'')
+    return os.path.normpath(os.path.expanduser(path)) if path else ''
+
+
 # ── Routes ────────────────────────────────────────────────────────────────────
 
 @app.route('/')
@@ -86,7 +92,7 @@ def serve_pdf(book_id):
     conn.close()
     if not book or not book['pdf_path']:
         return 'No PDF linked to this book.', 404
-    path = os.path.expanduser(book['pdf_path'])
+    path = clean_path(book['pdf_path'])
     if not os.path.isfile(path):
         return f'PDF file not found on disk: {path}', 404
     return send_file(path, mimetype='application/pdf')
@@ -103,7 +109,7 @@ def add_book():
         author = request.form.get('author', '').strip()
         genre = request.form.get('genre', '').strip()
         description = request.form.get('description', '').strip()
-        pdf_path = request.form.get('pdf_path', '').strip()
+        pdf_path = clean_path(request.form.get('pdf_path', ''))
 
         cover_file = ''
         upload = request.files.get('cover')
@@ -145,7 +151,7 @@ def edit_book(book_id):
         author = request.form.get('author', '').strip()
         genre = request.form.get('genre', '').strip()
         description = request.form.get('description', '').strip()
-        pdf_path = request.form.get('pdf_path', '').strip()
+        pdf_path = clean_path(request.form.get('pdf_path', ''))
 
         cover_file = book['cover_file']
         upload = request.files.get('cover')
