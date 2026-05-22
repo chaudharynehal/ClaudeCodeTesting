@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Add Book — My Bookshelf{% endblock %}
+
+{% block content %}
+<div class="form-page">
+  <div class="form-card">
+    <h1>Add a Book</h1>
+    <p class="form-sub">Fill in the details below. Only the title is required.</p>
+
+    <form method="post" enctype="multipart/form-data" class="book-form">
+
+      <div class="form-group required">
+        <label for="title">Title</label>
+        <input type="text" id="title" name="title" required
+               value="{{ form.get('title', '') }}" placeholder="e.g. The Great Gatsby">
+      </div>
+
+      <div class="form-group">
+        <label for="author">Author</label>
+        <input type="text" id="author" name="author"
+               value="{{ form.get('author', '') }}" placeholder="e.g. F. Scott Fitzgerald">
+      </div>
+
+      <div class="form-group">
+        <label for="genre">Genre</label>
+        <input type="text" id="genre" name="genre"
+               value="{{ form.get('genre', '') }}" placeholder="e.g. Fiction, Science, History&hellip;">
+      </div>
+
+      <div class="form-group">
+        <label for="pdf_path">PDF File Path</label>
+        <input type="text" id="pdf_path" name="pdf_path"
+               value="{{ form.get('pdf_path', '') }}"
+               placeholder="e.g. /home/user/Books/gatsby.pdf or ~/Documents/book.pdf">
+        <span class="form-hint">Absolute path to the PDF on your computer.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="cover">Cover Image <span class="optional">(optional)</span></label>
+        <input type="file" id="cover" name="cover" accept="image/*" class="file-input">
+        <span class="form-hint">PNG, JPG, WEBP &mdash; used as the book cover thumbnail.</span>
+      </div>
+
+      <div class="form-group">
+        <label for="description">Description / Notes</label>
+        <textarea id="description" name="description" rows="4"
+                  placeholder="A short description or your own notes about the book&hellip;">{{ form.get('description', '') }}</textarea>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn-primary">Add to Shelf</button>
+        <a href="{{ url_for('index') }}" class="btn-secondary">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

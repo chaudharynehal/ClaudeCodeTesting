@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}My Library{% endblock %}
+
+{% block content %}
+<section class="library-hero">
+  <div class="hero-text">
+    <h1>My Library</h1>
+    <p class="hero-sub">{{ books|length }} book{{ 's' if books|length != 1 else '' }} on your shelf</p>
+  </div>
+</section>
+
+<section class="controls">
+  <form class="search-form" method="get" action="{{ url_for('index') }}">
+    <div class="search-wrap">
+      <input type="text" name="q" class="search-input"
+             placeholder="Search by title or author&hellip;" value="{{ query }}">
+      <button type="submit" class="search-btn">Search</button>
+      {% if query %}
+        <a href="{{ url_for('index') }}" class="clear-btn">&#x2715; Clear</a>
+      {% endif %}
+    </div>
+  </form>
+
+  {% if genres %}
+  <div class="genre-bar">
+    <a href="{{ url_for('index') }}"
+       class="genre-chip {% if not selected_genre %}active{% endif %}">All</a>
+    {% for g in genres %}
+      <a href="{{ url_for('index', genre=g) }}"
+         class="genre-chip {% if selected_genre == g %}active{% endif %}">{{ g }}</a>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+{% if books %}
+<section class="bookshelf-section">
+  <div class="shelf-unit">
+    <div class="book-grid">
+      {% for book in books %}
+      <article class="book-card" onclick="location.href='{{ url_for('book_detail', book_id=book.id) }}'">
+        <div class="book-cover-wrap">
+          {% if book.cover_file %}
+            <img src="{{ url_for('static', filename='covers/' + book.cover_file) }}"
+                 alt="{{ book.title }}" class="book-cover-img">
+          {% else %}
+            <div class="book-cover-placeholder" data-title="{{ book.title }}" data-author="{{ book.author }}">
+              <span class="placeholder-title">{{ book.title }}</span>
+              {% if book.author %}
+                <span class="placeholder-author">{{ book.author }}</span>
+              {% endif %}
+            </div>
+          {% endif %}
+          {% if book.pdf_path %}
+            <span class="pdf-badge">PDF</span>
+          {% endif %}
+        </div>
+        <div class="book-meta">
+          <h3 class="book-title">{{ book.title }}</h3>
+          {% if book.author %}
+            <p class="book-author">{{ book.author }}</p>
+          {% endif %}
+          {% if book.genre %}
+            <span class="genre-tag">{{ book.genre }}</span>
+          {% endif %}
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+    <div class="shelf-plank"></div>
+  </div>
+</section>
+
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">&#128218;</div>
+  <h2>Your shelf is empty</h2>
+  <p>Add your first book to start building your library.</p>
+  <a href="{{ url_for('add_book') }}" class="btn-primary">Add a Book</a>
+</div>
+{% endif %}
+{% endblock %}
