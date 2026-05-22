@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+{% block title %}{{ book.title }} — My Bookshelf{% endblock %}
+
+{% block content %}
+<div class="detail-layout">
+
+  <!-- Sidebar -->
+  <aside class="detail-sidebar">
+    <div class="detail-cover">
+      {% if book.cover_file %}
+        <img src="{{ url_for('static', filename='covers/' + book.cover_file) }}"
+             alt="{{ book.title }}" class="detail-cover-img">
+      {% else %}
+        <div class="detail-cover-placeholder" data-title="{{ book.title }}">
+          <span>{{ book.title }}</span>
+        </div>
+      {% endif %}
+    </div>
+
+    <div class="detail-info">
+      <h1 class="detail-title">{{ book.title }}</h1>
+      {% if book.author %}
+        <p class="detail-author">by {{ book.author }}</p>
+      {% endif %}
+      {% if book.genre %}
+        <span class="genre-tag">{{ book.genre }}</span>
+      {% endif %}
+      {% if book.description %}
+        <p class="detail-desc">{{ book.description }}</p>
+      {% endif %}
+      <p class="detail-added">Added {{ book.added_date[:10] }}</p>
+    </div>
+
+    <div class="detail-actions">
+      {% if book.pdf_path %}
+        <a href="{{ url_for('serve_pdf', book_id=book.id) }}" target="_blank"
+           class="btn-primary">Open PDF</a>
+      {% else %}
+        <span class="no-pdf">No PDF linked</span>
+      {% endif %}
+      <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn-secondary">Edit</a>
+      <form method="post" action="{{ url_for('delete_book', book_id=book.id) }}"
+            onsubmit="return confirm('Remove this book from your shelf?')">
+        <button type="submit" class="btn-danger">Remove</button>
+      </form>
+    </div>
+
+    <a href="{{ url_for('index') }}" class="back-link">&#8592; Back to Library</a>
+  </aside>
+
+  <!-- PDF Viewer -->
+  <main class="detail-reader">
+    {% if book.pdf_path %}
+      <div class="pdf-toolbar">
+        <span class="pdf-label">Reading: {{ book.title }}</span>
+        <a href="{{ url_for('serve_pdf', book_id=book.id) }}" target="_blank"
+           class="pdf-open-btn">&#8599; Open in new tab</a>
+      </div>
+      <iframe class="pdf-frame"
+              src="{{ url_for('serve_pdf', book_id=book.id) }}"
+              title="{{ book.title }}"></iframe>
+    {% else %}
+      <div class="no-pdf-panel">
+        <div class="no-pdf-icon">&#128196;</div>
+        <h2>No PDF linked</h2>
+        <p>Edit this book to add a PDF file path from your computer.</p>
+        <a href="{{ url_for('edit_book', book_id=book.id) }}" class="btn-primary">Edit Book</a>
+      </div>
+    {% endif %}
+  </main>
+
+</div>
+{% endblock %}
