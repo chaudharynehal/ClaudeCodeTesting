@@ -1,0 +1,129 @@
+// JobPilot data model (SQLite). JSON-shaped fields are stored as TEXT and
+// parsed in the app layer (helpers in src/lib/json.ts).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Singleton row (id = 1) holding the user's profile + search filters.
+model Profile {
+  id              Int      @id @default(1)
+  fullName        String   @default("")
+  email           String   @default("")
+  phone           String   @default("")
+  location        String   @default("")
+  links           String   @default("{}") // JSON: { linkedin, github, portfolio, website }
+  coverLetterText String   @default("")   // base cover-letter template
+
+  // Search filters
+  targetRoles     String   @default("[]") // JSON string[]
+  locations       String   @default("[]") // JSON string[]
+  remoteOnly      Boolean  @default(false)
+  minSalary       Int?
+  keywords        String   @default("[]") // JSON string[] (skills to match/highlight)
+  excludeKeywords String   @default("[]") // JSON string[]
+  seniority       String   @default("")
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+// Reusable base resumes for A/B testing (e.g. "Backend-focused", "Leadership").
+model ResumeVariant {
+  id           String        @id @default(cuid())
+  label        String
+  content      String        // markdown / plain text
+  isDefault    Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+  applications Application[]
+}
+
+// A fetched or manually-imported job posting.
+model Job {
+  id           String       @id @default(cuid())
+  source       String // greenhouse | lever | ashby | remoteok | weworkremotely | manual
+  externalId   String       @default("")
+  company      String
+  title        String
+  location     String       @default("")
+  remote       Boolean      @default(false)
+  url          String       @default("")
+  description  String       @default("")
+  salary       String       @default("")
+  postedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  fetchedAt    DateTime     @default(now())
+  matchScore   Int          @default(0)
+  matchReasons String       @default("[]") // JSON string[]
+  hidden       Boolean      @default(false)
+  application  Application?
+
+  @@unique([source, externalId])
+}
+
+// Tracks a job through the application pipeline.
+model Application {
+  id                  String         @id @default(cuid())
+  jobId               String         @unique
+  job                 Job            @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  status              String         @default("matched")
+  // matched | queued | applied | waiting | responded | interview | offer | rejected | archived
+
+  variantId           String?
+  variant             ResumeVariant? @relation(fields: [variantId], references: [id])
+  tailoredResume      String         @default("")
+  tailoredCoverLetter String         @default("")
+  fitSummary          String         @default("")
+  matchHighlights     String         @default("[]") // JSON string[]
+  suggestedTweaks     String         @default("[]") // JSON string[]
+
+  notes               String         @default("")
+  appliedAt           DateTime?
+  offerSalary         String         @default("")
+
+  interviews          Interview[]
+  emailEvents         EmailEvent[]
+
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+}
+
+model Interview {
+  id            String      @id @default(cuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+  round         String      @default("")
+  scheduledAt   DateTime?
+  notes         String      @default("")
+  outcome       String      @default("pending") // pending | passed | failed
+  createdAt     DateTime    @default(now())
+}
+
+// Company boards to pull from (ATS connectors).
+model CompanySource {
+  id      Int     @id @default(autoincrement())
+  type    String // greenhouse | lever | ashby
+  token   String // board token / company slug
+  name    String  @default("")
+  enabled Boolean @default(true)
+
+  @@unique([type, token])
+}
+
+// Inbox messages matched to an application during an email scan.
+model EmailEvent {
+  id             String       @id @default(cuid())
+  applicationId  String?
+  application    Application?  @relation(fields: [applicationId], references: [id], onDelete: SetNull)
+  fromAddr       String       @default("")
+  subject        String       @default("")
+  snippet        String       @default("")
+  classification String       @default("other") // response | interview | offer | rejection | other
+  receivedAt     DateTime     @default(now())
+  createdAt      DateTime     @default(now())
+}
