@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+
+# next.js
+/.next/
+/out/
+next-env.d.ts
+
+# production
+/build
+
+# database (local SQLite — your data stays on your machine)
+*.db
+*.db-journal
+prisma/dev.db
+prisma/dev.db-journal
+
+# env / secrets
+.env
+.env.local
+.env*.local
+
+# misc
+.DS_Store
+*.log
+.vercel
+.idea
+.vscode
